@@ -11,26 +11,26 @@ import org.springframework.context.annotation.Bean;
 @SpringBootApplication
 public class BookStoreApplication {
 
-    private final BookService bookService;
-
-    public BookStoreApplication(BookService bookService) {
-        this.bookService = bookService;
-    }
-
     public static void main(String[] args) {
         SpringApplication.run(BookStoreApplication.class, args);
     }
 
     @Bean
-    public CommandLineRunner commandLineRunner() {
+    CommandLineRunner commandLineRunner(BookService bookService) {
         return args -> {
-            Book oldBook = new Book();
-            oldBook.setTitle("Biblia");
-            oldBook.setAuthor("John");
-            oldBook.setIsbn("978-3-540-119010");
-            oldBook.setPrice(BigDecimal.valueOf(200));
-            bookService.save(oldBook);
-            System.out.println(bookService.findAll());
+            String isbn = "978-3-540-119010";
+
+            boolean bookExists = bookService.findAll().stream()
+                    .anyMatch(book -> isbn.equals(book.getIsbn()));
+
+            if (!bookExists) {
+                Book book = new Book();
+                book.setTitle("Biblia");
+                book.setAuthor("John");
+                book.setIsbn(isbn);
+                book.setPrice(BigDecimal.valueOf(200));
+                bookService.save(book);
+            }
         };
     }
 }
