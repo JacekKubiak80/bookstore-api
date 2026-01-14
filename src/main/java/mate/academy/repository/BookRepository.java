@@ -2,6 +2,7 @@ package mate.academy.repository;
 
 import jakarta.persistence.criteria.CriteriaQuery;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import mate.academy.model.Book;
 import org.hibernate.Session;
@@ -55,6 +56,27 @@ public class BookRepository {
             }
 
             throw new RuntimeException("Could not load list of books", e);
+        }
+    }
+
+    public Optional<Book> findById(Long id) {
+        Transaction transaction = null;
+
+        try (Session session = sessionFactory.openSession()) {
+            transaction = session.beginTransaction();
+
+            Book book = session.get(Book.class, id); // pobranie po PK
+
+            transaction.commit();
+            return Optional.ofNullable(book);
+
+        } catch (Exception e) {
+
+            if (transaction != null) {
+                transaction.rollback();
+            }
+
+            throw new RuntimeException("Could not find book with id: " + id, e);
         }
     }
 }
