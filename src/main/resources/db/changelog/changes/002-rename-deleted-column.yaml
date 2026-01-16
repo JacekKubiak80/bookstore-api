@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-rename-deleted-column
+      author: mate-academy
+      changes:
+        - renameColumn:
+            tableName: books
+            oldColumnName: deleted
+            newColumnName: is_deleted
+            columnDataType: BOOLEAN
