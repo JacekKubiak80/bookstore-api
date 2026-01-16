@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,8 +16,8 @@ import org.hibernate.annotations.Where;
 @Setter
 @Entity
 @Table(name = "books")
-@SQLDelete(sql = "UPDATE books SET deleted = true WHERE id = ?")
-@Where(clause = "deleted = false")
+@SQLDelete(sql = "UPDATE books SET is_deleted = true WHERE id = ?")
+@Where(clause = "is_deleted = false")
 public class Book {
 
     @Id
@@ -30,11 +29,10 @@ public class Book {
     private String author;
     @Column(nullable = false, unique = true)
     private String isbn;
-    @NotNull
+    @Column(nullable = false)
     private BigDecimal price;
     private String description;
     private String coverImage;
-
-    @Column(nullable = false)
+    @Column(name = "is_deleted", nullable = false)
     private boolean deleted = false;
 }
