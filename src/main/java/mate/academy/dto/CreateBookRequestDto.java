@@ -17,7 +17,6 @@ public class CreateBookRequestDto {
     @NotNull(message = "Price must not be null")
     @Positive(message = "Price must be positive")
     private BigDecimal price;
-    @NotBlank(message = "Description must not be blank")
     private String description;
     private String coverImage;
 }

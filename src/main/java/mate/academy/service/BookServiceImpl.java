@@ -1,5 +1,6 @@
 package mate.academy.service;
 
+import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +35,35 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    @Transactional
     public BookDto create(CreateBookRequestDto bookDto) {
         Book book = bookMapper.toModel(bookDto);
         Book savedBook = bookRepository.save(book);
         return bookMapper.toDto(savedBook);
+    }
+
+    @Override
+    public BookDto update(Long id, CreateBookRequestDto dto) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Book not found with id " + id));
+
+        book.setTitle(dto.getTitle());
+        book.setAuthor(dto.getAuthor());
+        book.setIsbn(dto.getIsbn());
+        book.setPrice(dto.getPrice());
+        book.setDescription(dto.getDescription());
+        book.setCoverImage(dto.getCoverImage());
+
+        return bookMapper.toDto(bookRepository.save(book));
+    }
+
+    @Override
+    public void delete(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Book not found with id " + id));
+        bookRepository.delete(book);
     }
 }
 
