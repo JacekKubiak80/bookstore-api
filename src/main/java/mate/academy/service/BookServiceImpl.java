@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDto;
+import mate.academy.dto.BookSearchParametersDto;
 import mate.academy.dto.CreateBookRequestDto;
 import mate.academy.exception.DuplicateResourceException;
 import mate.academy.exception.EntityNotFoundException;
@@ -52,17 +53,19 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Book not found with id " + id));
 
+        String oldIsbn = book.getIsbn();
+        String newIsbn = bookDto.getIsbn();
+
+        if (!oldIsbn.equals(newIsbn) && bookRepository.existsByIsbn(newIsbn)) {
+            throw new DuplicateResourceException("ISBN already exists: " + newIsbn);
+        }
+
         book.setTitle(bookDto.getTitle());
         book.setAuthor(bookDto.getAuthor());
         book.setIsbn(bookDto.getIsbn());
         book.setPrice(bookDto.getPrice());
         book.setDescription(bookDto.getDescription());
         book.setCoverImage(bookDto.getCoverImage());
-
-        if (!book.getIsbn().equals(bookDto.getIsbn())
-                && bookRepository.existsByIsbn(bookDto.getIsbn())) {
-            throw new DuplicateResourceException("ISBN already exists: " + bookDto.getIsbn());
-        }
 
         return bookMapper.toDto(bookRepository.save(book));
     }
@@ -74,6 +77,32 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Book not found with id " + id));
         bookRepository.delete(book);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BookDto> searchBooks(BookSearchParametersDto searchParametersDto) {
+        return bookRepository.findAll().stream()
+                .filter(book -> {
+                    boolean matches = true;
+                    if (searchParametersDto.title() != null
+                            && !searchParametersDto.title().isBlank()) {
+                        matches &= book.getTitle().toLowerCase()
+                                .contains(searchParametersDto.title().toLowerCase());
+                    }
+                    if (searchParametersDto.author() != null
+                            && !searchParametersDto.author().isBlank()) {
+                        matches &= book.getAuthor().toLowerCase()
+                                .contains(searchParametersDto.author().toLowerCase());
+                    }
+                    if (searchParametersDto.isbn() != null
+                            && !searchParametersDto.isbn().isBlank()) {
+                        matches &= book.getIsbn().equalsIgnoreCase(searchParametersDto.isbn());
+                    }
+                    return matches;
+                })
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
     }
 }
 
