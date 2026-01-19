@@ -11,6 +11,8 @@ import mate.academy.exception.EntityNotFoundException;
 import mate.academy.mapper.BookMapper;
 import mate.academy.model.Book;
 import mate.academy.repository.BookRepository;
+import mate.academy.specification.BookSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,27 +84,15 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public List<BookDto> searchBooks(BookSearchParametersDto searchParametersDto) {
-        return bookRepository.findAll().stream()
-                .filter(book -> {
-                    boolean matches = true;
-                    if (searchParametersDto.title() != null
-                            && !searchParametersDto.title().isBlank()) {
-                        matches &= book.getTitle().toLowerCase()
-                                .contains(searchParametersDto.title().toLowerCase());
-                    }
-                    if (searchParametersDto.author() != null
-                            && !searchParametersDto.author().isBlank()) {
-                        matches &= book.getAuthor().toLowerCase()
-                                .contains(searchParametersDto.author().toLowerCase());
-                    }
-                    if (searchParametersDto.isbn() != null
-                            && !searchParametersDto.isbn().isBlank()) {
-                        matches &= book.getIsbn().equalsIgnoreCase(searchParametersDto.isbn());
-                    }
-                    return matches;
-                })
+        Specification<Book> spec = BookSpecification.withFilters(
+                searchParametersDto.titles(),
+                searchParametersDto.authors(),
+                searchParametersDto.isbns()
+        );
+
+        return bookRepository.findAll(spec).stream()
                 .map(bookMapper::toDto)
                 .collect(Collectors.toList());
     }
-}
 
+}
