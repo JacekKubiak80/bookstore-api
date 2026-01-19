@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDto;
+import mate.academy.dto.BookSearchParametersDto;
 import mate.academy.dto.CreateBookRequestDto;
 import mate.academy.exception.DuplicateResourceException;
 import mate.academy.exception.EntityNotFoundException;
 import mate.academy.mapper.BookMapper;
 import mate.academy.model.Book;
 import mate.academy.repository.BookRepository;
+import mate.academy.specification.BookSpecification;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,17 +55,19 @@ public class BookServiceImpl implements BookService {
                 .orElseThrow(() ->
                         new EntityNotFoundException("Book not found with id " + id));
 
+        String oldIsbn = book.getIsbn();
+        String newIsbn = bookDto.getIsbn();
+
+        if (!oldIsbn.equals(newIsbn) && bookRepository.existsByIsbn(newIsbn)) {
+            throw new DuplicateResourceException("ISBN already exists: " + newIsbn);
+        }
+
         book.setTitle(bookDto.getTitle());
         book.setAuthor(bookDto.getAuthor());
         book.setIsbn(bookDto.getIsbn());
         book.setPrice(bookDto.getPrice());
         book.setDescription(bookDto.getDescription());
         book.setCoverImage(bookDto.getCoverImage());
-
-        if (!book.getIsbn().equals(bookDto.getIsbn())
-                && bookRepository.existsByIsbn(bookDto.getIsbn())) {
-            throw new DuplicateResourceException("ISBN already exists: " + bookDto.getIsbn());
-        }
 
         return bookMapper.toDto(bookRepository.save(book));
     }
@@ -75,5 +80,19 @@ public class BookServiceImpl implements BookService {
                         new EntityNotFoundException("Book not found with id " + id));
         bookRepository.delete(book);
     }
-}
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<BookDto> searchBooks(BookSearchParametersDto searchParametersDto) {
+        Specification<Book> spec = BookSpecification.withFilters(
+                searchParametersDto.titles(),
+                searchParametersDto.authors(),
+                searchParametersDto.isbns()
+        );
+
+        return bookRepository.findAll(spec).stream()
+                .map(bookMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+}
