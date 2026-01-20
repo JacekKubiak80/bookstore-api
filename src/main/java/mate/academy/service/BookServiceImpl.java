@@ -1,7 +1,5 @@
 package mate.academy.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDto;
 import mate.academy.dto.BookSearchParametersDto;
@@ -12,6 +10,8 @@ import mate.academy.mapper.BookMapper;
 import mate.academy.model.Book;
 import mate.academy.repository.BookRepository;
 import mate.academy.specification.BookSpecification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,11 +25,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookDto> getAll() {
-        return bookRepository.findAll()
-                .stream()
-                .map(bookMapper::toDto)
-                .collect(Collectors.toList());
+    public Page<BookDto> getAll(Pageable pageable) {
+        return bookRepository.findAll(pageable)
+                .map(bookMapper::toDto);
     }
 
     @Override
@@ -83,16 +81,16 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookDto> searchBooks(BookSearchParametersDto searchParametersDto) {
+    public Page<BookDto> searchBooks(BookSearchParametersDto searchParametersDto,
+                                     Pageable pageable) {
+
         Specification<Book> spec = BookSpecification.withFilters(
                 searchParametersDto.titles(),
                 searchParametersDto.authors(),
                 searchParametersDto.isbns()
         );
 
-        return bookRepository.findAll(spec).stream()
-                .map(bookMapper::toDto)
-                .collect(Collectors.toList());
+        return bookRepository.findAll(spec, pageable)
+                .map(bookMapper::toDto);
     }
-
 }
