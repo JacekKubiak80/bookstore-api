@@ -1,12 +1,14 @@
 package mate.academy.controller;
 
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDto;
 import mate.academy.dto.BookSearchParametersDto;
 import mate.academy.dto.CreateBookRequestDto;
 import mate.academy.service.BookService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +29,10 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping
-    public List<BookDto> getAll() {
-        return bookService.getAll();
+    public Page<BookDto> getAll(
+            @PageableDefault(size = 10, sort = "title")
+            Pageable pageable) {
+        return bookService.getAll(pageable);
     }
 
     @GetMapping("/{id}")
@@ -38,7 +42,9 @@ public class BookController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookDto createBook(@Valid @RequestBody CreateBookRequestDto bookDto) {
+    public BookDto createBook(
+            @Valid @RequestBody CreateBookRequestDto bookDto) {
+
         return bookService.create(bookDto);
     }
 
@@ -46,6 +52,7 @@ public class BookController {
     public BookDto updateBook(
             @PathVariable Long id,
             @Valid @RequestBody CreateBookRequestDto bookDto) {
+
         return bookService.update(id, bookDto);
     }
 
@@ -56,7 +63,12 @@ public class BookController {
     }
 
     @GetMapping("/search")
-    public List<BookDto> searchBooks(@ModelAttribute BookSearchParametersDto searchParameters) {
-        return bookService.searchBooks(searchParameters);
+    public Page<BookDto> searchBooks(
+            @ModelAttribute BookSearchParametersDto searchParameters,
+            @PageableDefault(size = 10)
+            Pageable pageable) {
+
+        return bookService.searchBooks(searchParameters, pageable);
     }
 }
+
