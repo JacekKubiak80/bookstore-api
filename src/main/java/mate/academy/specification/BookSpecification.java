@@ -37,6 +37,9 @@ public class BookSpecification {
 
         List<Predicate> orPredicates = new ArrayList<>();
         for (String value : values) {
+            if (value == null || value.isEmpty()) {
+                continue;
+            }
             orPredicates.add(
                     cb.like(
                             cb.lower(field),
@@ -59,6 +62,9 @@ public class BookSpecification {
 
         List<Predicate> orPredicates = new ArrayList<>();
         for (String value : values) {
+            if (value == null || value.isBlank()) {
+                continue;
+            }
             orPredicates.add(
                     cb.equal(
                             cb.lower(field),

@@ -1,5 +1,7 @@
 package mate.academy.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDto;
@@ -24,11 +26,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/books")
 @RequiredArgsConstructor
+@Tag(name = "Books", description = "API for managing books")
 public class BookController {
 
     private final BookService bookService;
 
     @GetMapping
+    @Operation(summary = "Get all books")
     public Page<BookDto> getAll(
             @PageableDefault(size = 10, sort = "title")
             Pageable pageable) {
@@ -36,39 +40,40 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get book by ID")
     public BookDto getBookById(@PathVariable Long id) {
         return bookService.getById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Get book by ID")
     public BookDto createBook(
             @Valid @RequestBody CreateBookRequestDto bookDto) {
-
         return bookService.create(bookDto);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update an existing book")
     public BookDto updateBook(
             @PathVariable Long id,
             @Valid @RequestBody CreateBookRequestDto bookDto) {
-
         return bookService.update(id, bookDto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete a book")
     public void deleteBook(@PathVariable Long id) {
         bookService.delete(id);
     }
 
     @GetMapping("/search")
+    @Operation(summary = "Search books with filters")
     public Page<BookDto> searchBooks(
             @ModelAttribute BookSearchParametersDto searchParameters,
             @PageableDefault(size = 10)
             Pageable pageable) {
-
         return bookService.searchBooks(searchParameters, pageable);
     }
 }
-
