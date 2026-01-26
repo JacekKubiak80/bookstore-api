@@ -47,7 +47,7 @@ public class BookController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Get book by ID")
+    @Operation(summary = "Create book")
     public BookDto createBook(
             @Valid @RequestBody CreateBookRequestDto bookDto) {
         return bookService.create(bookDto);
