@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: janek
+      preConditions:
+        onFail: MARK_RAN
+        preConditions:
+          - tableExists:
+              tableName: roles
+          - tableExists:
+              tableName: users
+      changes:
+        - insert:
+            tableName: users_roles
+            columns:
+              - column:
+                  name: user_id
+                  valueNumeric: 1
+              - column:
+                  name: role_id
+                  valueNumeric: 1
