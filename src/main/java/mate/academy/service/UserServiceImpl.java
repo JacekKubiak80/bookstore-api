@@ -1,33 +1,45 @@
 package mate.academy.service;
 
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.UserRegistrationRequestDto;
 import mate.academy.dto.UserResponseDto;
+import mate.academy.exception.EntityNotFoundException;
 import mate.academy.exception.RegistrationException;
 import mate.academy.mapper.UserMapper;
+import mate.academy.model.Role;
+import mate.academy.model.RoleName;
 import mate.academy.model.User;
+import mate.academy.repository.RoleRepository;
 import mate.academy.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
     @Override
     @Transactional
     public UserResponseDto register(UserRegistrationRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RegistrationException(
-                    "User with email " + request.getEmail() + " already exists"
-            );
+            throw new RegistrationException("User already exists");
         }
 
         User user = userMapper.toModel(request);
-        User savedUser = userRepository.save(user);
-        return userMapper.toDto(savedUser);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Role userRole = roleRepository.findByName(RoleName.ROLE_USER)
+                .orElseThrow(() -> new EntityNotFoundException("ROLE_USER not found"));
+
+        user.setRoles(Set.of(userRole));
+
+        return userMapper.toDto(userRepository.save(user));
     }
 }
