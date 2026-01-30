@@ -2,9 +2,14 @@ databaseChangeLog:
   - changeSet:
       id: 002-rename-deleted-column
       author: mate-academy
+      preConditions:
+        onFail: MARK_RAN
+        preConditions:
+          - columnExists:
+              tableName: books
+              columnName: deleted
       changes:
         - renameColumn:
             tableName: books
             oldColumnName: deleted
             newColumnName: is_deleted
-            columnDataType: BOOLEAN
