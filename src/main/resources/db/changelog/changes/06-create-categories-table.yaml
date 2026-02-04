@@ -25,3 +25,5 @@ databaseChangeLog:
                   name: is_deleted
                   type: BOOLEAN
                   defaultValueBoolean: false
+                  constraints:
+                    nullable: false

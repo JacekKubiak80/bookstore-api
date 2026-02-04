@@ -1,8 +1,9 @@
 package mate.academy.service;
 
 import java.util.List;
-import mate.academy.dto.BookDtoWithoutCategoryId;
+import mate.academy.dto.BookDtoWithoutCategoryIds;
 import mate.academy.dto.CategoryDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CategoryService {
@@ -16,5 +17,5 @@ public interface CategoryService {
 
     void deleteById(Long id);
 
-    List<BookDtoWithoutCategoryId> getBooksByCategoryId(Long id);
+    Page<BookDtoWithoutCategoryIds> getBooksByCategoryId(Long id, Pageable pageable);
 }

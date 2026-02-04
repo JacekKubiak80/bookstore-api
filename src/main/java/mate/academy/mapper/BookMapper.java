@@ -2,7 +2,7 @@ package mate.academy.mapper;
 
 import java.util.stream.Collectors;
 import mate.academy.dto.BookDto;
-import mate.academy.dto.BookDtoWithoutCategoryId;
+import mate.academy.dto.BookDtoWithoutCategoryIds;
 import mate.academy.dto.CreateBookRequestDto;
 import mate.academy.model.Book;
 import mate.academy.model.Category;
@@ -17,7 +17,7 @@ public interface BookMapper {
 
     Book toModel(CreateBookRequestDto dto);
 
-    BookDtoWithoutCategoryId toDtoWithoutCategories(Book book);
+    BookDtoWithoutCategoryIds toDtoWithoutCategories(Book book);
 
     @AfterMapping
     default void setCategoryIds(

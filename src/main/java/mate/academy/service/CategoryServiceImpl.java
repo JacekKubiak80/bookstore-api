@@ -4,13 +4,16 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import mate.academy.dto.BookDtoWithoutCategoryId;
+import mate.academy.dto.BookDtoWithoutCategoryIds;
 import mate.academy.dto.CategoryDto;
 import mate.academy.mapper.BookMapper;
 import mate.academy.mapper.CategoryMapper;
+import mate.academy.model.Book;
 import mate.academy.model.Category;
 import mate.academy.repository.BookRepository;
 import mate.academy.repository.CategoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -61,10 +64,16 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public List<BookDtoWithoutCategoryId> getBooksByCategoryId(Long id) {
-        return bookRepository.findAllByCategories_Id(id)
-                .stream()
+    public Page<BookDtoWithoutCategoryIds> getBooksByCategoryId(Long id, Pageable pageable) {
+
+        categoryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+        Page<Book> booksPage = bookRepository. findAllByCategoryId(id, pageable);
+
+        List<BookDtoWithoutCategoryIds> dtoList = booksPage.stream()
                 .map(bookMapper::toDtoWithoutCategories)
                 .toList();
+
+        return new PageImpl<>(dtoList, pageable, booksPage.getTotalElements());
     }
 }
