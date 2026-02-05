@@ -13,3 +13,4 @@ databaseChangeLog:
             tableName: books
             oldColumnName: deleted
             newColumnName: is_deleted
+            columnDataType: TINYINT(1)

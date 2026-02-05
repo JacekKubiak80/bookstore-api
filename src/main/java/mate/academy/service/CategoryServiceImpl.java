@@ -28,10 +28,10 @@ public class CategoryServiceImpl implements CategoryService {
     private final BookMapper bookMapper;
 
     @Override
-    public List<CategoryDto> findAll(Pageable pageable) {
+    public Page<CategoryDto> findAll(Pageable pageable) {
         return categoryRepository.findAll(pageable)
-                .map(categoryMapper::toDto)
-                .getContent();
+                .map(categoryMapper::toDto);
+
     }
 
     @Override
@@ -68,7 +68,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found"));
-        Page<Book> booksPage = bookRepository. findAllByCategoryId(id, pageable);
+        Page<Book> booksPage = bookRepository.findAllByCategories_Id(id, pageable);
 
         List<BookDtoWithoutCategoryIds> dtoList = booksPage.stream()
                 .map(bookMapper::toDtoWithoutCategories)

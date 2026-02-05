@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import mate.academy.dto.BookDtoWithoutCategoryIds;
 import mate.academy.dto.CategoryDto;
@@ -49,7 +48,7 @@ public class CategoryController {
     @Operation(summary = "Get all categories")
     @ApiResponse(responseCode = "200", description = "Categories retrieved")
     @GetMapping
-    public List<CategoryDto> getAll(
+    public Page<CategoryDto> getAll(
             @Parameter(description = "Pagination parameters")
             @PageableDefault Pageable pageable) {
 

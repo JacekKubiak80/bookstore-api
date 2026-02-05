@@ -9,13 +9,14 @@ import mate.academy.model.Category;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public interface BookMapper {
 
     BookDto toDto(Book book);
 
-    Book toModel(CreateBookRequestDto dto);
+    Book toEntity(CreateBookRequestDto dto);
 
     BookDtoWithoutCategoryIds toDtoWithoutCategories(Book book);
 
@@ -30,5 +31,15 @@ public interface BookMapper {
                         .map(Category::getId)
                         .collect(Collectors.toSet())
         );
+    }
+
+    @Named("bookFromId")
+    default Book bookFromId(Long id) {
+        if (id == null) {
+            return null;
+        }
+        Book book = new Book();
+        book.setId(id);
+        return book;
     }
 }
