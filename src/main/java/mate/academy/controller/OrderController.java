@@ -25,21 +25,25 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    @PreAuthorize("hasRole('USER')")
     @PostMapping
     public OrderDto placeOrder(@Valid @RequestBody CreateOrderRequestDto request) {
         return orderService.placeOrder(request);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping
     public List<OrderDto> getOrders() {
         return orderService.getUserOrders();
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{orderId}/items")
     public List<OrderItemDto> getItems(@PathVariable Long orderId) {
         return orderService.getOrderItems(orderId);
     }
 
+    @PreAuthorize("hasRole('USER')")
     @GetMapping("/{orderId}/items/{itemId}")
     public OrderItemDto getItem(
             @PathVariable Long orderId,
