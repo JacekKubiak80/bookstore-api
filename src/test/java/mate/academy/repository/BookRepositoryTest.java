@@ -25,7 +25,8 @@ class BookRepositoryTest {
         book.setIsbn("123-456");
         book.setPrice(BigDecimal.TEN);
         bookRepository.save(book);
-        assertTrue(bookRepository.existsByIsbn("123-456"));    }
+        assertTrue(bookRepository.existsByIsbn("123-456"));
+    }
 
     @Test
     void findAllByCategoriesId_shouldReturnPage() {
@@ -38,7 +39,8 @@ class BookRepositoryTest {
         bookRepository.save(book);
 
         Page<Book> page = bookRepository.findAllByCategories_Id(0L, PageRequest.of(0, 10));
-        assertNotNull(page);    }
+        assertNotNull(page);
+    }
 
     @Test
     void saveAndRetrieve_shouldPersistBook() {
