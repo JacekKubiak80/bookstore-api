@@ -1,6 +1,7 @@
 package mate.academy.repository;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import mate.academy.model.Category;
 import org.junit.jupiter.api.Test;
@@ -39,9 +40,9 @@ class CategoryRepositoryTest {
         category.setName("History");
 
         Category saved = categoryRepository.save(category);
+
         categoryRepository.deleteById(saved.getId());
 
-        Category retrieved = categoryRepository.findById(saved.getId()).orElse(null);
-        assertNotNull(saved);
+        assertTrue(categoryRepository.findById(saved.getId()).isEmpty());
     }
 }
