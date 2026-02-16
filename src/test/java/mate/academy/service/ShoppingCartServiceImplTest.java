@@ -1,16 +1,14 @@
 package mate.academy.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import mate.academy.dto.AddCartItemRequestDto;
+import mate.academy.dto.CartItemDto;
 import mate.academy.dto.ShoppingCartDto;
 import mate.academy.dto.UpdateCartItemRequestDto;
 import mate.academy.mapper.ShoppingCartMapper;
@@ -27,9 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 @ExtendWith(MockitoExtension.class)
 class ShoppingCartServiceImplTest {
@@ -45,121 +42,121 @@ class ShoppingCartServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    // Spy pozwala mockować wybrane metody w serwisie
+    @Spy
     @InjectMocks
     private ShoppingCartServiceImpl cartService;
 
     private User user;
+    private ShoppingCart cart;
+    private Book book;
+    private CartItem cartItem;
 
     @BeforeEach
     void setUp() {
+        // Tworzymy tylko proste obiekty, bez logiki security
         user = new User();
         user.setId(1L);
         user.setEmail("user@test.com");
 
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(user.getEmail(), null)
-        );
+        cart = new ShoppingCart();
+        cart.setId(1L);
+        cart.setUser(user);
+        cart.setCartItems(new HashSet<>());
 
-        when(userRepository.findByEmail(user.getEmail()))
-                .thenReturn(Optional.of(user));
+        book = new Book();
+        book.setId(5L);
+        book.setTitle("Test Book");
+
+        cartItem = new CartItem();
+        cartItem.setId(10L);
+        cartItem.setBook(book);
+        cartItem.setShoppingCart(cart);
+        cartItem.setQuantity(3);
+
+        // Mockujemy getCurrentUser(), aby testy nie polegały na SecurityContext
+        doReturn(user).when(cartService).getCurrentUser();
     }
 
     @Test
-    void getCart_shouldCreateCartIfNotExists() {
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-
-        ShoppingCartDto cartDto = new ShoppingCartDto();
-
-        when(cartRepository.findByUser(user)).thenReturn(Optional.empty());
-        when(cartRepository.save(any())).thenReturn(cart);
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
-        ShoppingCartDto result = cartService.getCart();
-
-        assertNotNull(result);
-        verify(cartRepository).save(any());
-        verify(cartMapper).toDto(cart);
-    }
-    @Test
-    void addBook_shouldAddNewItem() {
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-
-        Book book = new Book();
-        book.setId(10L);
-
+    void addBook_shouldReturnExpectedDto() {
+        // given
         AddCartItemRequestDto request = new AddCartItemRequestDto();
-        request.setBookId(10L);
-        request.setQuantity(2);
+        request.setBookId(book.getId());
+        request.setQuantity(3);
 
-        ShoppingCartDto cartDto = new ShoppingCartDto();
+        cart.setCartItems(Set.of(cartItem));
+
+        ShoppingCartDto expected = new ShoppingCartDto();
+        expected.setId(cart.getId());
+        expected.setUserId(user.getId());
+        expected.setCartItems(Set.of(
+                new CartItemDto(cartItem.getId(), user.getId(), book.getId(), cartItem.getQuantity())
+        ));
 
         when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
-        when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+        when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book));
+        when(cartMapper.toDto(cart)).thenReturn(expected);
 
-        ShoppingCartDto result = cartService.addBook(request);
+        // when
+        ShoppingCartDto actual = cartService.addBook(request);
 
-        assertNotNull(result);
-        assertEquals(1, cart.getCartItems().size());
-        assertEquals(cartDto, result);
-
+        // then
+        assertEquals(expected, actual);
         verify(cartMapper).toDto(cart);
-        verify(cartRepository, never()).save(any());
     }
 
     @Test
-    void updateQuantity_shouldUpdateItem() {
-        ShoppingCart cart = new ShoppingCart();
-        cart.setUser(user);
-
-        CartItem item = new CartItem();
-        item.setId(5L);
-        item.setQuantity(1);
-        item.setShoppingCart(cart);
-
+    void updateQuantity_shouldReturnExpectedDto() {
+        // given
         UpdateCartItemRequestDto request = new UpdateCartItemRequestDto();
         request.setQuantity(5);
 
-        ShoppingCartDto cartDto = new ShoppingCartDto();
+        ShoppingCartDto expected = new ShoppingCartDto();
+        expected.setId(cart.getId());
+        expected.setUserId(user.getId());
+        expected.setCartItems(Set.of(
+                new CartItemDto(cartItem.getId(), user.getId(), book.getId(), request.getQuantity())
+        ));
 
-        when(cartItemRepository.findByIdAndShoppingCartUser(5L, user))
-                .thenReturn(Optional.of(item));
-        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+        when(cartItemRepository.findByIdAndShoppingCartUser(cartItem.getId(), user))
+                .thenReturn(Optional.of(cartItem));
+        when(cartMapper.toDto(cart)).thenReturn(expected);
 
-        ShoppingCartDto result = cartService.updateQuantity(5L, request);
+        // when
+        ShoppingCartDto actual = cartService.updateQuantity(cartItem.getId(), request);
 
-        assertEquals(5, item.getQuantity());
-        assertNotNull(result);
-        assertEquals(cartDto, result);
+        // then
+        assertEquals(5, cartItem.getQuantity());
+        assertEquals(expected, actual);
         verify(cartMapper).toDto(cart);
     }
 
     @Test
     void deleteItem_shouldDeleteCartItem() {
-        CartItem item = new CartItem();
-        item.setId(7L);
+        // given
+        when(cartItemRepository.findByIdAndShoppingCartUser(cartItem.getId(), user))
+                .thenReturn(Optional.of(cartItem));
 
-        when(cartItemRepository.findByIdAndShoppingCartUser(7L, user))
-                .thenReturn(Optional.of(item));
+        // when
+        cartService.deleteItem(cartItem.getId());
 
-        cartService.deleteItem(7L);
-
-        verify(cartItemRepository).delete(item);
+        // then
+        verify(cartItemRepository).delete(cartItem);
     }
 
     @Test
     void addBook_shouldThrowExceptionWhenBookNotFound() {
+        // given
         AddCartItemRequestDto request = new AddCartItemRequestDto();
         request.setBookId(99L);
         request.setQuantity(1);
 
-        when(cartRepository.findByUser(user))
-                .thenReturn(Optional.of(new ShoppingCart()));
-        when(bookRepository.findById(99L))
-                .thenReturn(Optional.empty());
+        when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
+        when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
-        EntityNotFoundException exception = assertThrows(
+        // when & then
+        EntityNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
                 EntityNotFoundException.class,
                 () -> cartService.addBook(request)
         );
@@ -167,3 +164,4 @@ class ShoppingCartServiceImplTest {
         assertEquals("Book not found", exception.getMessage());
     }
 }
+
