@@ -2,13 +2,16 @@ package mate.academy.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.Mockito.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 import mate.academy.dto.AddCartItemRequestDto;
+import mate.academy.dto.ShoppingCartDto;
 import mate.academy.dto.UpdateCartItemRequestDto;
 import mate.academy.mapper.ShoppingCartMapper;
 import mate.academy.model.Book;
@@ -66,15 +69,17 @@ class ShoppingCartServiceImplTest {
         ShoppingCart cart = new ShoppingCart();
         cart.setUser(user);
 
+        ShoppingCartDto cartDto = new ShoppingCartDto();
+
         when(cartRepository.findByUser(user)).thenReturn(Optional.empty());
         when(cartRepository.save(any())).thenReturn(cart);
-        when(cartMapper.toDto(cart)).thenReturn(null);
+        when(cartMapper.toDto(cart)).thenReturn(cartDto);
+        ShoppingCartDto result = cartService.getCart();
 
-        assertNotNull(cartService.getCart());
-
+        assertNotNull(result);
         verify(cartRepository).save(any());
+        verify(cartMapper).toDto(cart);
     }
-
     @Test
     void addBook_shouldAddNewItem() {
         ShoppingCart cart = new ShoppingCart();
@@ -87,13 +92,20 @@ class ShoppingCartServiceImplTest {
         request.setBookId(10L);
         request.setQuantity(2);
 
+        ShoppingCartDto cartDto = new ShoppingCartDto();
+
         when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
         when(bookRepository.findById(10L)).thenReturn(Optional.of(book));
-        when(cartMapper.toDto(cart)).thenReturn(null);
+        when(cartMapper.toDto(cart)).thenReturn(cartDto);
 
-        cartService.addBook(request);
+        ShoppingCartDto result = cartService.addBook(request);
 
+        assertNotNull(result);
         assertEquals(1, cart.getCartItems().size());
+        assertEquals(cartDto, result);
+
+        verify(cartMapper).toDto(cart);
+        verify(cartRepository, never()).save(any());
     }
 
     @Test
@@ -109,13 +121,18 @@ class ShoppingCartServiceImplTest {
         UpdateCartItemRequestDto request = new UpdateCartItemRequestDto();
         request.setQuantity(5);
 
+        ShoppingCartDto cartDto = new ShoppingCartDto();
+
         when(cartItemRepository.findByIdAndShoppingCartUser(5L, user))
                 .thenReturn(Optional.of(item));
-        when(cartMapper.toDto(cart)).thenReturn(null);
+        when(cartMapper.toDto(cart)).thenReturn(cartDto);
 
-        cartService.updateQuantity(5L, request);
+        ShoppingCartDto result = cartService.updateQuantity(5L, request);
 
         assertEquals(5, item.getQuantity());
+        assertNotNull(result);
+        assertEquals(cartDto, result);
+        verify(cartMapper).toDto(cart);
     }
 
     @Test
@@ -142,10 +159,11 @@ class ShoppingCartServiceImplTest {
         when(bookRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
-        try {
-            cartService.addBook(request);
-        } catch (EntityNotFoundException e) {
-            assertEquals("Book not found", e.getMessage());
-        }
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> cartService.addBook(request)
+        );
+
+        assertEquals("Book not found", exception.getMessage());
     }
 }
