@@ -26,7 +26,7 @@ public interface BookMapper {
             Book book) {
 
         bookDto.setCategoryIds(
-                book.getCategories()
+                (java.util.List<Long>) book.getCategories()
                         .stream()
                         .map(Category::getId)
                         .collect(Collectors.toSet())

@@ -11,18 +11,13 @@ import mate.academy.service.BookService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/books")
@@ -35,35 +30,49 @@ public class BookController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping
     @Operation(summary = "Get all books")
-    public Page<BookDto> getAll(
-            @PageableDefault(size = 10, sort = "title")
-            Pageable pageable) {
-        return bookService.getAll(pageable);
+    public ResponseEntity<Map<String, Object>> getAll(
+            @PageableDefault(size = 10, sort = "title") Pageable pageable) {
+
+        Page<BookDto> page = bookService.getAll(pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", page.getContent());
+        response.put("page", page.getNumber());
+        response.put("size", page.getSize());
+        response.put("totalElements", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/{id}")
     @Operation(summary = "Get book by ID")
-    public BookDto getBookById(@PathVariable Long id) {
-        return bookService.getById(id);
+    public ResponseEntity<BookDto> getBookById(@PathVariable Long id) {
+        BookDto book = bookService.getById(id);
+        return ResponseEntity.ok(book);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create book")
-    public BookDto createBook(
+    public ResponseEntity<BookDto> createBook(
             @Valid @RequestBody CreateBookRequestDto bookDto) {
-        return bookService.create(bookDto);
+
+        BookDto created = bookService.create(bookDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing book")
-    public BookDto updateBook(
+    public ResponseEntity<BookDto> updateBook(
             @PathVariable Long id,
             @Valid @RequestBody CreateBookRequestDto bookDto) {
-        return bookService.update(id, bookDto);
+
+        BookDto updated = bookService.update(id, bookDto);
+        return ResponseEntity.ok(updated);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -77,10 +86,19 @@ public class BookController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @GetMapping("/search")
     @Operation(summary = "Search books with filters")
-    public Page<BookDto> searchBooks(
+    public ResponseEntity<Map<String, Object>> searchBooks(
             @ModelAttribute BookSearchParametersDto searchParameters,
-            @PageableDefault(size = 10)
-            Pageable pageable) {
-        return bookService.searchBooks(searchParameters, pageable);
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<BookDto> page = bookService.searchBooks(searchParameters, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", page.getContent());
+        response.put("page", page.getNumber());
+        response.put("size", page.getSize());
+        response.put("totalElements", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        return ResponseEntity.ok(response);
     }
 }
