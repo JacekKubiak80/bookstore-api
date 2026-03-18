@@ -42,12 +42,10 @@ class BookRepositoryTest {
 
     @Test
     void findAllByCategoriesId_shouldReturnPage() {
-        // Tworzymy kategorię
         Category category = new Category();
         category.setName("Fiction");
         category = categoryRepository.save(category);
 
-        // Tworzymy książkę i przypisujemy kategorię
         Book book = new Book();
         book.setTitle("Category Test Book");
         book.setAuthor("Author");
@@ -57,8 +55,8 @@ class BookRepositoryTest {
 
         bookRepository.save(book);
 
-        // Test repozytorium z paginacją
-        Page<Book> page = bookRepository.findAllByCategories_Id(category.getId(), PageRequest.of(0, 10));
+        Page<Book> page = bookRepository.findAllByCategories_Id(category.getId(),
+                PageRequest.of(0, 10));
         assertNotNull(page);
         assertTrue(page.getContent().size() > 0);
         assertTrue(page.getContent().get(0).getCategories().contains(category));
@@ -81,12 +79,10 @@ class BookRepositoryTest {
 
     @Test
     void saveBookWithCategory_shouldPersistRelation() {
-        // Tworzymy kategorię
         Category category = new Category();
         category.setName("Science");
         category = categoryRepository.save(category);
 
-        // Tworzymy książkę i przypisujemy kategorię
         Book book = new Book();
         book.setTitle("Science Book");
         book.setAuthor("Author");
@@ -98,7 +94,6 @@ class BookRepositoryTest {
         assertNotNull(saved.getId());
         assertTrue(saved.getCategories().contains(category));
 
-        // Pobieramy książkę i sprawdzamy relację
         Book retrieved = bookRepository.findById(saved.getId()).orElse(null);
         assertNotNull(retrieved);
         assertTrue(retrieved.getCategories().contains(category));

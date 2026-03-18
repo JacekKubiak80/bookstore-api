@@ -1,7 +1,9 @@
 package mate.academy.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.HashSet;
@@ -42,7 +44,6 @@ class ShoppingCartServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
-    // Spy pozwala mockować wybrane metody w serwisie
     @Spy
     @InjectMocks
     private ShoppingCartServiceImpl cartService;
@@ -54,7 +55,6 @@ class ShoppingCartServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        // Tworzymy tylko proste obiekty, bez logiki security
         user = new User();
         user.setId(1L);
         user.setEmail("user@test.com");
@@ -74,7 +74,6 @@ class ShoppingCartServiceImplTest {
         cartItem.setShoppingCart(cart);
         cartItem.setQuantity(3);
 
-        // Mockujemy getCurrentUser(), aby testy nie polegały na SecurityContext
         doReturn(user).when(cartService).getCurrentUser();
     }
 
@@ -91,24 +90,22 @@ class ShoppingCartServiceImplTest {
         expected.setId(cart.getId());
         expected.setUserId(user.getId());
         expected.setCartItems(Set.of(
-                new CartItemDto(cartItem.getId(), user.getId(), book.getId(), cartItem.getQuantity())
+                new CartItemDto(cartItem.getId(), user.getId(),
+                        book.getId(), cartItem.getQuantity())
         ));
 
         when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
         when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book));
         when(cartMapper.toDto(cart)).thenReturn(expected);
 
-        // when
         ShoppingCartDto actual = cartService.addBook(request);
 
-        // then
         assertEquals(expected, actual);
         verify(cartMapper).toDto(cart);
     }
 
     @Test
     void updateQuantity_shouldReturnExpectedDto() {
-        // given
         UpdateCartItemRequestDto request = new UpdateCartItemRequestDto();
         request.setQuantity(5);
 
@@ -123,10 +120,8 @@ class ShoppingCartServiceImplTest {
                 .thenReturn(Optional.of(cartItem));
         when(cartMapper.toDto(cart)).thenReturn(expected);
 
-        // when
         ShoppingCartDto actual = cartService.updateQuantity(cartItem.getId(), request);
 
-        // then
         assertEquals(5, cartItem.getQuantity());
         assertEquals(expected, actual);
         verify(cartMapper).toDto(cart);
@@ -134,20 +129,16 @@ class ShoppingCartServiceImplTest {
 
     @Test
     void deleteItem_shouldDeleteCartItem() {
-        // given
         when(cartItemRepository.findByIdAndShoppingCartUser(cartItem.getId(), user))
                 .thenReturn(Optional.of(cartItem));
 
-        // when
         cartService.deleteItem(cartItem.getId());
 
-        // then
         verify(cartItemRepository).delete(cartItem);
     }
 
     @Test
     void addBook_shouldThrowExceptionWhenBookNotFound() {
-        // given
         AddCartItemRequestDto request = new AddCartItemRequestDto();
         request.setBookId(99L);
         request.setQuantity(1);
@@ -155,7 +146,6 @@ class ShoppingCartServiceImplTest {
         when(cartRepository.findByUser(user)).thenReturn(Optional.of(cart));
         when(bookRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // when & then
         EntityNotFoundException exception = org.junit.jupiter.api.Assertions.assertThrows(
                 EntityNotFoundException.class,
                 () -> cartService.addBook(request)
@@ -164,4 +154,3 @@ class ShoppingCartServiceImplTest {
         assertEquals("Book not found", exception.getMessage());
     }
 }
-

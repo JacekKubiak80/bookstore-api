@@ -1,10 +1,8 @@
 # 📚 Book Store API
 
-Book Store API is a RESTful backend application for managing an online bookstore. It allows users to browse books, manage a shopping cart, and place orders, while administrators can manage books and categories.
+Book Store API is a RESTful backend application for managing an online bookstore. It solves the common problem of organizing books, categories, and orders in a scalable and secure way. The system allows users to browse books, manage a shopping cart, and place orders, while administrators can manage the store’s content.
 
-The application demonstrates a clean and scalable architecture based on Spring Boot. It includes authentication with JWT, role-based authorization, and practical business features such as filtering, pagination, and order processing.
-
-This project is a solid example of a real-world backend system, combining security, database operations, and modular design in a clear and maintainable way.
+The application demonstrates a clean, production-like architecture using Spring Boot, with JWT-based authentication, role-based authorization, and modular design.
 
 ---
 
@@ -12,12 +10,14 @@ This project is a solid example of a real-world backend system, combining securi
 
 - User registration and authentication (JWT)
 - Role-based access (USER / ADMIN)
-- Book management (CRUD + search)
+- Book management (CRUD + search with filters)
 - Category management
-- Shopping cart
-- Order processing
+- Shopping cart per user
+- Order processing with total calculation
 - Global exception handling
-- Validation support
+- Validation (including custom `@FieldMatch`)
+
+---
 
 ## 🛠 Tech Stack
 
@@ -26,9 +26,57 @@ This project is a solid example of a real-world backend system, combining securi
 - Spring Security
 - JWT (JSON Web Token)
 - Spring Data JPA (Hibernate)
-- MySQL / PostgreSQL (configurable)
+- MySQL / PostgreSQL
 - Lombok
 - Swagger (OpenAPI)
+
+---
+
+## 🏗 Architecture
+
+The application follows a layered architecture:
+
+- Controller – handles HTTP requests
+- Service – business logic
+- Repository – database access
+- DTO – data transfer
+- Security – JWT authentication and authorization
+
+---
+
+## 🏗 Architecture Diagram
+
+                ┌─────────────┐
+                │   Client    │
+                │(Browser/Postman)│
+                └──────┬──────┘
+                       │ HTTP Requests (JSON)
+                       ▼
+                ┌─────────────┐
+                │ Controller  │
+                │(REST Endpoints)│
+                └──────┬──────┘
+                       │
+                       ▼
+                ┌─────────────┐
+                │  Service    │
+                │(Business Logic)│
+                └──────┬──────┘
+                       │
+                       ▼
+                ┌─────────────┐
+                │ Repository  │
+                │(JPA / DB)  │
+                └──────┬──────┘
+                       │
+                       ▼
+                ┌─────────────┐
+                │   MySQL DB  │
+                └─────────────┘
+
+Security Layer:
+- JWT Authentication
+- Role-based Authorization (USER / ADMIN)
 
 ## 🔐 Authentication
 
@@ -39,73 +87,74 @@ Use token in requests:
 
 ---
 
-## 📦 API Endpoints
+## 🔑 Test Credentials
 
-### Books (`/api/books`)
-- `GET /` – list books (pagination)
-- `GET /{id}` – get book by id
-- `POST /` – create book (ADMIN)
-- `PUT /{id}` – update book (ADMIN)
-- `DELETE /{id}` – delete book (ADMIN)
-- `GET /search` – search books (filters: title, author, isbn)
+USER:
+email: user@test.com  
+password: password123
 
-### Categories (`/api/categories`)
-- `GET /` – list categories
-- `GET /{id}` – get category
-- `POST /` – create (ADMIN)
-- `PUT /{id}` – update (ADMIN)
-- `DELETE /{id}` – delete (ADMIN)
-- `GET /{id}/books` – books by category
-
-### Cart (`/api/cart`)
-- `GET /` – get cart
-- `POST /` – add book
-- `PUT /cart-items/{id}` – update quantity
-- `DELETE /cart-items/{id}` – remove item
-
-### Orders (`/api/orders`)
-- `POST /` – place order
-- `GET /` – user orders
-- `GET /{id}/items` – order items
-- `GET /{id}/items/{itemId}` – single item
-- `PATCH /{id}` – update status (ADMIN)
+ADMIN:
+email: admin@test.com  
+password: admin123
 
 ---
 
-## ⚙️ Configuration
+## 📬 Example Requests
 
-Set in `application.properties`:
+### Register
+POST /api/auth/register
+
+```json
+{
+  "email": "user@test.com",
+  "password": "password123",
+  "repeatPassword": "password123",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+```
+
+
+### Login
+POST /api/auth/login
+
+```json
+{
+  "email": "user@test.com",
+  "password": "password123"
+}
+```
+
+### Create Book (ADMIN)
+POST /api/books
+```json
+{
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "isbn": "123456789",
+  "price": 39.99
+}
+```
+
+## ⚙️ Configuration
+...
+
 spring.datasource.url=jdbc:mysql://localhost:3306/book_store
+
 spring.datasource.username=your_username
 spring.datasource.password=your_password
 
 jwt.secret=your_secret_key
 jwt.expiration=3600000
 
----
 
 ## ▶️ Run the App
+...
 
 mvn clean install
 mvn spring-boot:run
 
-App runs on:
-
-http://localhost:8080
-
----
-
 ## 📄 Swagger
+...
 
 http://localhost:8080/swagger-ui/index.html
-
----
-
-## 🧩 Notes
-
-- Soft delete implemented for Book and Category
-- Validation handled via DTO + custom annotation (`@FieldMatch`)
-- Security based on stateless JWT authentication
-- Pagination supported in main endpoints
-
----

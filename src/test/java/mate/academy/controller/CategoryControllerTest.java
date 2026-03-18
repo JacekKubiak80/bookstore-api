@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.math.BigDecimal;
 import java.util.List;
 import mate.academy.dto.BookDtoWithoutCategoryIds;
@@ -52,7 +51,6 @@ class CategoryControllerTest {
     @MockBean
     private CustomUserDetailsService customUserDetailsService;
 
-    // Helper methods to create DTOs
     private CategoryDto createCategoryDto() {
         CategoryDto dto = new CategoryDto();
         dto.setId(1L);
