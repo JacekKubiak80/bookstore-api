@@ -1,7 +1,7 @@
 package mate.academy.dto;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -14,5 +14,5 @@ public class BookDto {
     private BigDecimal price;
     private String description;
     private String coverImage;
-    private Set<Long> categoryIds;
+    private List<Long> categoryIds;
 }
